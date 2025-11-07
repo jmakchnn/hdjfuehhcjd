@@ -1,4 +1,4 @@
-name: 从 cfnew 同步 Releases
+name: 从 cfnew 同步 Releases （新）
 
 on:
   workflow_dispatch:  # 手动触发
