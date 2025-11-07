@@ -33,9 +33,17 @@ jobs:
           echo "正在获取文件列表..."
           ASSETS=$(curl -s "$ASSETS_URL")
           
-          # 提取第一个 asset 的下载 URL 和文件名
-          DOWNLOAD_URL=$(echo "$ASSETS" | sed -n 's/.*"browser_download_url": "\([^"]*\)".*/\1/p' | head -1)
-          FILE_NAME=$(echo "$ASSETS" | sed -n 's/.*"name": "\([^"]*\)".*/\1/p' | head -1)
+          # 查找 Pages.zip 文件
+          # 使用更可靠的方法查找包含 Pages.zip 的下载 URL
+          DOWNLOAD_URL=$(echo "$ASSETS" | grep -i "Pages\.zip" | grep -o '"browser_download_url": "[^"]*"' | sed 's/"browser_download_url": "\([^"]*\)"/\1/' | head -1)
+          FILE_NAME="Pages.zip"
+          
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "错误：未找到 Pages.zip 文件"
+            echo "可用的文件列表："
+            echo "$ASSETS" | grep -o '"name": "[^"]*"' | sed 's/"name": "\([^"]*\)"/  - \1/'
+            exit 1
+          fi
           
           echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
           echo "file_name=$FILE_NAME" >> $GITHUB_OUTPUT
@@ -103,6 +111,21 @@ jobs:
           
           echo "下载成功: $FILE_NAME"
           
+          # 解压缩 Pages.zip
+          echo "正在解压缩 $FILE_NAME..."
+          unzip -o "$FILE_NAME" -d .
+          
+          if [ $? -ne 0 ]; then
+            echo "错误：解压缩失败"
+            exit 1
+          fi
+          
+          echo "解压缩成功"
+          
+          # 删除 zip 文件（可选，如果不需要保留）
+          rm -f "$FILE_NAME"
+          echo "已删除压缩文件: $FILE_NAME"
+          
           # 确保创建或更新版本记录文件
           if [ ! -f "VERSION.txt" ]; then
             echo "创建版本记录文件"
@@ -148,4 +171,3 @@ jobs:
           else
             echo "- 状态: ⏭️ 版本相同，无需更新" >> $GITHUB_STEP_SUMMARY
           fi
-
