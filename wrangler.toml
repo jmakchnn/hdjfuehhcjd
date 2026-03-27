@@ -1,5 +1,1 @@
-name = "hdjfuehhcjd"
-main = "_worker.js"
-compatibility_date = "2025-11-02"
-usage_model = "bundled"
-workers_dev = true
+compatibility_date = "2026-01-20"
